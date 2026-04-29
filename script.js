@@ -195,18 +195,30 @@
       submit.textContent = 'Sending...';
       submit.disabled = true;
 
-      // Simulate send (replace with real form handler)
-      setTimeout(() => {
-        submit.textContent = '✓ Message Sent!';
-        submit.classList.add('sent');
-        form.reset();
-
+      // Real form submission with Formspree
+      fetch("https://formspree.io/f/mqakovwa", {
+        method: "POST",
+        body: new FormData(form),
+        headers: {
+          'Accept': 'application/json'
+        }
+      }).then(response => {
+        if (response.ok) {
+          submit.textContent = '✓ Message Sent!';
+          submit.classList.add('sent');
+          form.reset();
+        } else {
+          alert("Oops! There was a problem submitting your form. Please try again or use the email link above.");
+        }
+      }).catch(error => {
+        alert("Oops! There was a problem submitting your form. Please try again or use the email link above.");
+      }).finally(() => {
         setTimeout(() => {
           submit.textContent = 'Send Message';
           submit.classList.remove('sent');
           submit.disabled = false;
         }, 4000);
-      }, 1200);
+      });
     });
   }
 
