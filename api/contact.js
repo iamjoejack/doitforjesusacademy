@@ -46,6 +46,16 @@ export default async function handler(req, res) {
         return res.status(200).json({ message: 'Success' });
     } catch (error) {
         console.error('SMTP Error:', error);
-        return res.status(500).json({ error: 'Failed to send email' });
+        let errorMessage = 'Failed to send email';
+        
+        if (error.code === 'EAUTH') {
+            errorMessage = 'Authentication failed. Please check your EMAIL_PASS or App Password.';
+        } else if (error.code === 'ECONNREFUSED') {
+            errorMessage = 'Could not connect to the SMTP server. Please check the host and port.';
+        } else if (error.message.includes('Invalid login')) {
+            errorMessage = 'Invalid login credentials.';
+        }
+        
+        return res.status(500).json({ error: errorMessage });
     }
 }
