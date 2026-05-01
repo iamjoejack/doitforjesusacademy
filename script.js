@@ -196,22 +196,28 @@
       submit.disabled = true;
 
       // Real form submission with Formspree
-      fetch("https://formspree.io/f/mqakovwa", {
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      fetch("/api/contact", {
         method: "POST",
-        body: new FormData(form),
+        body: JSON.stringify(data),
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json'
         }
-      }).then(response => {
+      }).then(async response => {
         if (response.ok) {
           submit.textContent = '✓ Message Sent!';
           submit.classList.add('sent');
           form.reset();
         } else {
-          alert("Oops! There was a problem submitting your form. Please try again or use the email link above.");
+          const errData = await response.json().catch(() => ({}));
+          console.error('Server Error:', errData);
+          alert(`Submission failed: ${errData.error || 'Server error'}. Please try again later.`);
         }
       }).catch(error => {
-        alert("Oops! There was a problem submitting your form. Please try again or use the email link above.");
+        console.error('Network Error:', error);
+        alert("Network error: Could not reach the server. Please check your connection or try again later.");
       }).finally(() => {
         setTimeout(() => {
           submit.textContent = 'Send Message';
