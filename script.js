@@ -170,6 +170,11 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
   /* ========== CONTACT FORM ========== */
+  // Submissions are emailed by FormSubmit (https://formsubmit.co). No backend
+  // or SMTP login needed. To send to a different inbox, change this address.
+  const CONTACT_EMAIL = 'jesus@doitforjesusacademy.org';
+  const FORMSUBMIT_URL = 'https://formsubmit.co/ajax/' + CONTACT_EMAIL;
+
   const form   = document.getElementById('contact-form');
   const submit = document.getElementById('contact-submit');
 
@@ -195,10 +200,13 @@
       submit.textContent = 'Sending...';
       submit.disabled = true;
 
-      // Real form submission with Formspree
+      // Build the payload and add FormSubmit's control fields.
       const data = Object.fromEntries(new FormData(form).entries());
+      data._subject = 'New contact form: ' + (data.interest || 'general');
+      data._template = 'table';
+      data._captcha = 'false';
 
-      fetch("/api/contact", {
+      fetch(FORMSUBMIT_URL, {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
@@ -206,14 +214,14 @@
           'Accept': 'application/json'
         }
       }).then(async response => {
-        if (response.ok) {
+        const result = await response.json().catch(() => ({}));
+        if (response.ok && result.success !== 'false') {
           submit.textContent = '✓ Message Sent!';
           submit.classList.add('sent');
           form.reset();
         } else {
-          const errData = await response.json().catch(() => ({}));
-          console.error('Server Error:', errData);
-          alert(`Submission failed: ${errData.error || 'Server error'}. Please try again later.`);
+          console.error('Submission error:', result);
+          alert(`Submission failed: ${result.message || 'Please try again later.'}`);
         }
       }).catch(error => {
         console.error('Network Error:', error);
