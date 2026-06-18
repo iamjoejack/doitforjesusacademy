@@ -200,11 +200,21 @@
       submit.textContent = 'Sending...';
       submit.disabled = true;
 
-      // Build the payload and add FormSubmit's control fields.
-      const data = Object.fromEntries(new FormData(form).entries());
-      data._subject = 'New contact form: ' + (data.interest || 'general');
-      data._template = 'table';
-      data._captcha = 'false';
+      // Build a clean, readable payload plus FormSubmit's control fields.
+      const fd = new FormData(form);
+      const interestLabel = (form.interest.selectedOptions[0] && form.interest.selectedOptions[0].text) || fd.get('interest') || 'General';
+      const data = {
+        Name: (fd.get('first_name') + ' ' + fd.get('last_name')).trim(),
+        Email: fd.get('email'),
+        Phone: fd.get('phone') || 'Not provided',
+        'Interested in': interestLabel,
+        Message: fd.get('message') || 'No message provided',
+        _honey: fd.get('_honey') || '',        // spam honeypot
+        _replyto: fd.get('email'),             // replies go to the sender
+        _subject: 'New contact form: ' + interestLabel,
+        _template: 'table',
+        _captcha: 'false'
+      };
 
       fetch(FORMSUBMIT_URL, {
         method: "POST",
